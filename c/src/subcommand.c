@@ -329,7 +329,7 @@ static bool get_arguments_helper(int argc, char **argv, int *index, const char *
     current_arg = unshift_next_valid_arg(argc, argv, index, NULL, is_interleaved_arg);
     if (current_arg == INVALID_ARGUMENT)
     {
-        fprintf(stderr, "Invalid argument: %s\n", argv[*index]);
+        fprintf(stderr, current_arg, argv[*index]);
         return false;
     }
 

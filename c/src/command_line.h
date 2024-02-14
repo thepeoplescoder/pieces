@@ -9,6 +9,6 @@ const char *command_line___unshift_next_valid_arg(int argc, char **argv, int *in
 
 #define command_line___unshift_next_arg(argc, argv, index) command_line___unshift_next_valid_arg((argc), (argv), (index), NULL, NULL)
 
-extern const char command_line___OUT_OF_MEMORY[];
-extern const char command_line___NO_MORE_ARGUMENTS[];
-extern const char command_line___INVALID_ARGUMENT[];
+extern const char *command_line___OUT_OF_MEMORY;
+extern const char *command_line___NO_MORE_ARGUMENTS;
+extern const char *command_line___INVALID_ARGUMENT;

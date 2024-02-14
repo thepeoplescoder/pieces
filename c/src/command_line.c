@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include "command_line.h"
 
-const char command_line___OUT_OF_MEMORY[]     = {'\0'};
-const char command_line___NO_MORE_ARGUMENTS[] = {'\0'};
-const char command_line___INVALID_ARGUMENT[]  = {'\0'};
+const char *command_line___OUT_OF_MEMORY     = "Out of memory to evaluate argument\n";
+const char *command_line___NO_MORE_ARGUMENTS = "No more arguments\n";
+const char *command_line___INVALID_ARGUMENT  = "Invalid argument: %s\n";
 
 #define OUT_OF_MEMORY     command_line___OUT_OF_MEMORY
 #define NO_MORE_ARGUMENTS command_line___NO_MORE_ARGUMENTS

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "command_line.h"
 #include "command_line_syntax.h"
 #include "subcommand.h"
@@ -20,14 +21,9 @@ int main(int argc, char **argv)
 
     current_arg = unshift_next_valid_arg(argc, argv, &index, NULL, is_first_task);
 
-    if (current_arg == OUT_OF_MEMORY)
+    if (current_arg == OUT_OF_MEMORY || current_arg == INVALID_ARGUMENT)
     {
-        fprintf(stderr, "Out of memory to evaluate argument\n");
-        return 1;
-    }
-    else if (current_arg == INVALID_ARGUMENT)
-    {
-        fprintf(stderr, "Invalid argument: %s\n", argv[index]);
+        fprintf(stderr, current_arg, argv[index]);
         return 1;
     }
 
