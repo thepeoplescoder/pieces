@@ -49,8 +49,6 @@ static bool get_next_three_filenames(int argc, char **argv, int *index, const ch
 static long file_length(FILE *fp);
 static void file_close(FILE *fp);
 
-#define __abs(x) (((x) >= 0) ? (x) : (-(x)))
-
 subcommand___subcommand subcommand___pick_subcommand(const char *arg)
 {
     if      (is_help_arg(arg) || arg == NO_MORE_ARGUMENTS) { return display_help;              }
@@ -268,7 +266,7 @@ static int merge_files(const char *infilename1, const char *infilename2, const c
             ch = getc(fin[i]);
             if (ch == EOF)
             {
-                if (i)
+                if (i || !feof(fin[i]))
                 {
                     perror("Error");
                     result = 1;
