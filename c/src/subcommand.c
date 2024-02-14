@@ -273,7 +273,12 @@ static int merge_files(const char *infilename1, const char *infilename2, const c
                 }
                 break;
             }
-            putc(ch, fout);
+            if (putc(ch, fout) == EOF)
+            {
+                perror("Error");
+                result = 1;
+                break;
+            }
             i = !i;
         }
     }
