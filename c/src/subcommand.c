@@ -190,7 +190,7 @@ static int split_files(const char *infilename, const char *outfilename1, const c
         ends[0]   = starts[1];
         starts[0] = 0;
 
-        for (offset = 0, i = 0; i < 2 && 0 <= offset && offset < length; i++)
+        for (offset = 0, i = 0; i < 2 && offset < length; i++)
         {
             for (offset = starts[i]; offset < ends[i]; offset++)
             {
