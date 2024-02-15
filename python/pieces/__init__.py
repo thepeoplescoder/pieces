@@ -15,8 +15,8 @@ def main() -> int:
         next_arg_as=lambda x: x.lower(),
 
         display_help=is_help_arg,
-        split_file_get_arguments=is_split_arg,
-        merge_files_get_arguments=is_merge_arg)
+        split=is_split_arg,
+        merge=is_merge_arg)
 
     if first_task is None:
         first_task = "display_help"

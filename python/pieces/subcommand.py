@@ -1,3 +1,7 @@
+import functools
+import io
+import os
+
 from typing import TypeAlias
 from collections.abc import Callable
 from typing import BinaryIO
@@ -42,25 +46,23 @@ def display_help(argd: CommandLineDeque) -> int:
 
     return 0
 
-def merge_files_get_arguments(argd: CommandLineDeque) -> int:
+def merge(argd: CommandLineDeque) -> int:
     """Merges the files together."""
-    filename_errors = [
+    return handle_merge_or_split(argd, handler=merge_files, filename_errors=[
         "Input file name #1 not provided.",
         "Input file name #2 not provided.",
         "Output file name not provided.",
-    ]
-    return handle_merge_or_split(argd, filename_errors, merge_files)
+    ])
 
-def split_file_get_arguments(argd: CommandLineDeque) -> int:
+def split(argd: CommandLineDeque) -> int:
     """Splits a file into two parts"""
-    filename_errors = [
+    return handle_merge_or_split(argd, handler=split_file, filename_errors=[
         "Input file name not provided.",
         "Output file name #1 not provided.",
         "Output file name #2 not provided.",
-    ]
-    return handle_merge_or_split(argd, filename_errors, split_file)
+    ])
 
-def handle_merge_or_split(argd: CommandLineDeque, filename_errors: list[str], handler: SplitMergeHandler) -> int:
+def handle_merge_or_split(argd: CommandLineDeque, *, handler: SplitMergeHandler, filename_errors: list[str]) -> int:
     filenames = argd.unshift_next_args(count=3)
     try:
         index = filenames.index(None)
@@ -92,6 +94,38 @@ def merge_files(filenames: tuple[str, str, str], is_interleaved: bool) -> int:
     infile: list[BinaryIO] = files[:2]
     outfile:      BinaryIO = files[2]
 
+    with infile[0]:
+        with infile[1]:
+            with outfile:
+                infile_length = [file_length(f) for f in infile]
+
+                if infile_length[1] > infile_length[0]:
+                    print("First file must be equal in size or larger than the first file.")
+                    return 1
+
+                if infile_length[0] - infile_length[1] > 1:
+                    print("Files can only differ in size by one byte.")
+                    return 1
+
+                i = 0
+
+                if is_interleaved:
+                    def read() -> bytes:
+                        nonlocal i
+                        b = infile[i].read(1)
+                        i = int(not i)
+                        return b
+                else:
+                    def read() -> bytes:
+                        nonlocal i
+                        b = infile[int(i >= infile_length[0])].read(1)
+                        i += 1
+                        return b
+
+                bytes_in = iter(read, b'')
+                for b in bytes_in:
+                    outfile.write(b)
+
     return 0
 
 def split_file(filenames: tuple[str, str, str], is_interleaved: bool) -> int:
@@ -102,6 +136,29 @@ def split_file(filenames: tuple[str, str, str], is_interleaved: bool) -> int:
 
     infile:        BinaryIO = files[0]
     outfile: list[BinaryIO] = files[1:]
+
+    with infile:
+        with outfile[0]:
+            with outfile[1]:
+                infile_length = file_length(infile)
+                midpoint = infile_length - (infile_length // 2)
+
+                i = 0
+
+                if is_interleaved:
+                    def write(b: bytes) -> None:
+                        nonlocal i
+                        outfile[i].write(b)
+                        i = int(not i)
+                else:
+                    def write(b: bytes) -> None:
+                        nonlocal i
+                        outfile[int(i >= midpoint)].write(b)
+                        i += 1
+
+                bytes_in = iter(functools.partial(infile.read, 1), b'')
+                for b in bytes_in:
+                    write(b)
 
     return 0
 
@@ -117,17 +174,27 @@ def open_files(filenames: tuple[str, str, str], *modes: str) -> list[BinaryIO] |
     files: list[BinaryIO] = []
 
     for filename, mode in zip(filenames, modes):
+        if mode not in error_strings:
+            print(f"Invalid mode: {mode}\n")
+            return None
         try:
-            if mode not in error_strings:
-                print(f"Invalid mode: {mode}\n")
-                return None
-
             files.append(open(filename, mode))
         except OSError:
+            for f in files:
+                f.close()
             print(error_strings[mode].format(filename))
             return None
 
     return files
+
+def file_length(f: io.IOBase) -> int:
+    if f is None:
+        return 0
+    pos = f.tell()
+    f.seek(0, os.SEEK_END)
+    length = f.tell()
+    f.seek(pos, os.SEEK_SET)
+    return length
 
 def invalid_argument(argd: CommandLineDeque) -> int:
     print(f"Invalid argument: {argd[0]}")

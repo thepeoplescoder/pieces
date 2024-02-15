@@ -6,8 +6,6 @@ from collections.abc import Callable
 from typing import TypeAlias
 from typing import TypeGuard
 
-from .utils import these_are_all_disjoint
-
 ArgumentTransformer: TypeAlias = Callable[[str], str]
 ArgumentList:        TypeAlias = Iterable[str]
 ArgumentChecker:     TypeAlias = Callable[[str], bool]
