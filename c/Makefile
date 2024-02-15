@@ -1,7 +1,7 @@
 # Makefile for pieces C implementation.
 # Hopefully it is simple enough to describe the project structure.
 #
-# See https://makefiletutorial.com/ for an easy to follow tutorial on makefiles.
+# See https://makefiletutorial.com/ for an easy to follow tutorial on makefiles (not my website).
 #
 # Author:
 #    Austin Cathey (thepeoplescoder)
