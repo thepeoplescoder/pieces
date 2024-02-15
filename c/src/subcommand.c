@@ -29,8 +29,8 @@
 #define SPLIT_ARGS         command_line_syntax___SPLIT_ARGS
 #define INTERLEAVED_ARGS   command_line_syntax___INTERLEAVED_ARGS
 
-#define join_zstrings zstrings___join_zstrings
-#define zstring_array zstrings___zstring_array
+#define join_zstrings_to_buffer zstrings___join_zstrings_to_buffer
+#define zstring_array           zstrings___zstring_array
 
 #define static_array_length(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -58,55 +58,54 @@ subcommand___subcommand subcommand___pick_subcommand(const char *arg)
 
 static int display_help(int argc, char **argv, int *index, const char *current_arg)
 {
-    char *arg_executable_without_path;
-    char format_string[256];
+    char format_string[256];        /* this function makes some unsafe calls to sprintf */
+    char buf[256];                  /* and join_zstrings_to_buffer.  the strings that we are*/
+    char buf_interleaved[256];      /* creating are much, much smaller than 256 chars. */
 
-    char *help_args_string        = NULL;
-    char *split_args_string       = NULL;
-    char *merge_args_string       = NULL;
-    char *interleaved_args_string = NULL;
-
-    const char *ARG_SEP = ", ";
+    const char *SEP1 = " | ";
+    const char *SEP2 = ", ";
 
     int result = 0;
 
-    help_args_string        = join_zstrings(ARG_SEP, static_array_length(HELP_ARGS),        (zstring_array)HELP_ARGS);
-    split_args_string       = join_zstrings(ARG_SEP, static_array_length(SPLIT_ARGS),       (zstring_array)SPLIT_ARGS);
-    merge_args_string       = join_zstrings(ARG_SEP, static_array_length(MERGE_ARGS),       (zstring_array)MERGE_ARGS);
-    interleaved_args_string = join_zstrings(ARG_SEP, static_array_length(INTERLEAVED_ARGS), (zstring_array)INTERLEAVED_ARGS);
+    char *arg_executable_without_path = strrchr(argv[0], PATH_SEPARATOR) + 1;
 
-    if (help_args_string && split_args_string && merge_args_string && interleaved_args_string)
-    {
-        arg_executable_without_path = strrchr(argv[0], PATH_SEPARATOR) + 1;
 
-        printf("Usage:\n");
-        printf("%s%s [--help | -?]\n", INDENT, arg_executable_without_path);
-        printf("%s%s {--split | -s} infile  outfile1 outfile2 [--interleaved | -i]\n", INDENT, arg_executable_without_path);
-        printf("%s%s {--merge | -m} infile1 infile2  outfile  [--interleaved | -i]\n", INDENT, arg_executable_without_path);
-        putchar('\n');
 
-        sprintf(format_string, "%%s%%s%%-%ds%%s\n", 30);    // potentially unsafe, but this string should never surpass 256 chars.
+    printf("Usage:\n");
 
-        printf(format_string, INDENT, INDENT, help_args_string,        "Displays this help section.");
-        printf(format_string, INDENT, INDENT, split_args_string,       "Splits infile into outfile1 and outfile2.");
-        printf(format_string, INDENT, INDENT, merge_args_string,       "Merges infile1 and infile2 into outfile.");
-        printf(format_string, INDENT, INDENT, interleaved_args_string, "Split or merge interleaved.");
-        printf(format_string, INDENT, INDENT, "",                      "If omitted, splitting/merging is");
-        printf(format_string, INDENT, INDENT, "",                      "done in consecutive chunks.");
-        putchar('\n');
+    join_zstrings_to_buffer(buf, SEP1, static_array_length(HELP_ARGS), (zstring_array)HELP_ARGS);
+    printf("%s%s [%s]\n", INDENT, arg_executable_without_path, buf);
 
-        printf("%sArguments in [] are optional, arguments in {} are required.\n\n", INDENT);
-    }
-    else
-    {
-        fprintf(stderr, "We ran out of memory creating some strings.  This shouldn't happen.\n");
-        result = 1;
-    }
+    join_zstrings_to_buffer(buf, SEP1, static_array_length(SPLIT_ARGS), (zstring_array)SPLIT_ARGS);
+    join_zstrings_to_buffer(buf_interleaved, SEP1, static_array_length(INTERLEAVED_ARGS), (zstring_array)INTERLEAVED_ARGS);
+    printf("%s%s {%s} infile  outfile1 outfile2 [%s]\n", INDENT, arg_executable_without_path, buf, buf_interleaved);
 
-    free(help_args_string);
-    free(split_args_string);
-    free(merge_args_string);
-    free(interleaved_args_string);
+    join_zstrings_to_buffer(buf, SEP1, static_array_length(MERGE_ARGS), (zstring_array)MERGE_ARGS);
+    printf("%s%s {%s} infile1 infile2  outfile  [%s]\n", INDENT, arg_executable_without_path, buf, buf_interleaved);
+    putchar('\n');
+
+
+
+    sprintf(format_string, "%%s%%s%%-%ds%%s\n", 30);
+
+    join_zstrings_to_buffer(buf, SEP2, static_array_length(HELP_ARGS), (zstring_array)HELP_ARGS);
+    printf(format_string, INDENT, INDENT, buf, "Displays this help section.");
+
+    join_zstrings_to_buffer(buf, SEP2, static_array_length(SPLIT_ARGS), (zstring_array)SPLIT_ARGS);
+    printf(format_string, INDENT, INDENT, buf, "Splits infile into outfile1 and outfile2.");
+
+    join_zstrings_to_buffer(buf, SEP2, static_array_length(MERGE_ARGS), (zstring_array)MERGE_ARGS);
+    printf(format_string, INDENT, INDENT, buf, "Merges infile1 and infile2 into outfile.");
+
+    join_zstrings_to_buffer(buf, SEP2, static_array_length(INTERLEAVED_ARGS), (zstring_array)INTERLEAVED_ARGS);
+    printf(format_string, INDENT, INDENT, buf, "Split or merge interleaved.");
+    printf(format_string, INDENT, INDENT, "",  "If omitted, splitting/merging is");
+    printf(format_string, INDENT, INDENT, "",  "done in consecutive chunks.");
+    putchar('\n');
+
+
+
+    printf("%sArguments in [] are optional, arguments in {} are required.\n\n", INDENT);
 
     return result;
 }
@@ -158,8 +157,8 @@ static int split_files(const char *infilename, const char *outfilename1, const c
         if (!fout[i])
         {
             fprintf(stderr, "Could not open %s for writing.", outfilename[i]);
-            file_close(fin);
-            file_close(fout[0]);
+            file_close(fin);        /* why only these two statements are okay */
+            file_close(fout[0]);    /* is an exercise for the reader. */
             return 1;
         }
     }
@@ -227,7 +226,7 @@ static int merge_files(const char *infilename1, const char *infilename2, const c
         if (!fin[i])
         {
             fprintf(stderr, "Could not open %s for reading.\n", infilename[i]);
-            file_close(fin[0]);
+            file_close(fin[0]);     /* why only this?  that's an exercise for the reader. */
             return 1;
         }
     }
@@ -236,7 +235,7 @@ static int merge_files(const char *infilename1, const char *infilename2, const c
     if (!fout)
     {
         fprintf(stderr, "Could not open %s for writing.\n", outfilename);
-        fclose(fin[0]);
+        fclose(fin[0]);             /* ditto */
         fclose(fin[1]);
         return 1;
     }

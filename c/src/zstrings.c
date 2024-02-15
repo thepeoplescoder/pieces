@@ -22,7 +22,7 @@ char *zstrings___join_zstrings(const char *join_string, size_t array_len, zstrin
 
 char *zstrings___join_zstrings_buffer_create(const char *join_string, size_t array_len, zstrings___zstring_array string_array)
 {
-    return (char *)malloc(sizeof(char) * (join_zstrings_length(join_string, array_len, string_array) + 1));
+    return (char *)calloc(join_zstrings_length(join_string, array_len, string_array) + 1, sizeof(char));
 }
 
 size_t zstrings___join_zstrings_length(const char *join_string, size_t array_len, zstrings___zstring_array string_array)
