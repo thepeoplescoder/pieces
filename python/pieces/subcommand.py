@@ -94,37 +94,35 @@ def merge_files(filenames: tuple[str, str, str], is_interleaved: bool) -> int:
     infile: list[BinaryIO] = files[:2]
     outfile:      BinaryIO = files[2]
 
-    with infile[0]:
-        with infile[1]:
-            with outfile:
-                infile_length = [file_length(f) for f in infile]
+    with files[0], files[1], files[2]:
+        infile_length = [file_length(f) for f in infile]
 
-                if infile_length[1] > infile_length[0]:
-                    print("First file must be equal in size or larger than the first file.")
-                    return 1
+        if infile_length[1] > infile_length[0]:
+            print("First file must be equal in size or larger than the first file.")
+            return 1
 
-                if infile_length[0] - infile_length[1] > 1:
-                    print("Files can only differ in size by one byte.")
-                    return 1
+        if infile_length[0] - infile_length[1] > 1:
+            print("Files can only differ in size by one byte.")
+            return 1
 
-                i = 0
+        i = 0
 
-                if is_interleaved:
-                    def read() -> bytes:
-                        nonlocal i
-                        b = infile[i].read(1)
-                        i = int(not i)
-                        return b
-                else:
-                    def read() -> bytes:
-                        nonlocal i
-                        b = infile[int(i >= infile_length[0])].read(1)
-                        i += 1
-                        return b
+        if is_interleaved:
+            def read() -> bytes:
+                nonlocal i
+                b = infile[i].read(1)
+                i = int(not i)
+                return b
+        else:
+            def read() -> bytes:
+                nonlocal i
+                b = infile[int(i >= infile_length[0])].read(1)
+                i += 1
+                return b
 
-                bytes_in = iter(read, b'')
-                for b in bytes_in:
-                    outfile.write(b)
+        bytes_in = iter(read, b'')
+        for b in bytes_in:
+            outfile.write(b)
 
     return 0
 
@@ -137,28 +135,26 @@ def split_file(filenames: tuple[str, str, str], is_interleaved: bool) -> int:
     infile:        BinaryIO = files[0]
     outfile: list[BinaryIO] = files[1:]
 
-    with infile:
-        with outfile[0]:
-            with outfile[1]:
-                infile_length = file_length(infile)
-                midpoint = infile_length - (infile_length // 2)
+    with files[0], files[1], files[2]:
+        infile_length = file_length(infile)
+        midpoint = infile_length - (infile_length // 2)
 
-                i = 0
+        i = 0
 
-                if is_interleaved:
-                    def write(b: bytes) -> None:
-                        nonlocal i
-                        outfile[i].write(b)
-                        i = int(not i)
-                else:
-                    def write(b: bytes) -> None:
-                        nonlocal i
-                        outfile[int(i >= midpoint)].write(b)
-                        i += 1
+        if is_interleaved:
+            def write(b: bytes) -> None:
+                nonlocal i
+                outfile[i].write(b)
+                i = int(not i)
+        else:
+            def write(b: bytes) -> None:
+                nonlocal i
+                outfile[int(i >= midpoint)].write(b)
+                i += 1
 
-                bytes_in = iter(functools.partial(infile.read, 1), b'')
-                for b in bytes_in:
-                    write(b)
+        bytes_in = iter(functools.partial(infile.read, 1), b'')
+        for b in bytes_in:
+            write(b)
 
     return 0
 
