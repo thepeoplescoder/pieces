@@ -27,7 +27,7 @@ PLATFORM_DIR_EXE = $(DIR_EXES)/$(PLATFORM)
 
 PATH_TO_EXECUTABLE = $(PLATFORM_DIR_EXE)/$(EXECUTABLE_FILE_NAME)
 
-OBJECTS =                                     \
+OBJECTS = \
 	$(PLATFORM_DIR_OBJ)/command_line_syntax.o \
 	$(PLATFORM_DIR_OBJ)/command_line.o        \
 	$(PLATFORM_DIR_OBJ)/main.o                \
@@ -36,7 +36,7 @@ OBJECTS =                                     \
 
 all: $(PATH_TO_EXECUTABLE)
 
-$(PATH_TO_EXECUTABLE):  \
+$(PATH_TO_EXECUTABLE): \
 	$(PLATFORM_DIR_EXE) \
 	$(OBJECTS)
 		gcc -o $@ $(OBJECTS)
@@ -49,31 +49,31 @@ $(DIR_EXES):
 	mkdir $@
 
 $(PLATFORM_DIR_OBJ)/command_line_syntax.o: \
-	$(PLATFORM_DIR_OBJ)                    \
-	$(SOURCE_DIR)/command_line_syntax.c    \
+	$(PLATFORM_DIR_OBJ)                 \
+	$(SOURCE_DIR)/command_line_syntax.c \
 	$(SOURCE_DIR)/command_line_syntax.h
 		gcc -c $(SOURCE_DIR)/command_line_syntax.c -o $@
 
 $(PLATFORM_DIR_OBJ)/command_line.o: \
-	$(PLATFORM_DIR_OBJ)             \
-	$(SOURCE_DIR)/command_line.c    \
+	$(PLATFORM_DIR_OBJ)          \
+	$(SOURCE_DIR)/command_line.c \
 	$(SOURCE_DIR)/command_line.h
 		gcc -c $(SOURCE_DIR)/command_line.c -o $@
 
 $(PLATFORM_DIR_OBJ)/main.o: \
-	$(PLATFORM_DIR_OBJ)     \
+	$(PLATFORM_DIR_OBJ)  \
 	$(SOURCE_DIR)/main.c
 		gcc -c $(SOURCE_DIR)/main.c -o $@
 
 $(PLATFORM_DIR_OBJ)/subcommand.o: \
-	$(PLATFORM_DIR_OBJ)           \
-	$(SOURCE_DIR)/subcommand.c    \
+	$(PLATFORM_DIR_OBJ)        \
+	$(SOURCE_DIR)/subcommand.c \
 	$(SOURCE_DIR)/subcommand.h
 		gcc -c $(SOURCE_DIR)/subcommand.c -o $@
 
 $(PLATFORM_DIR_OBJ)/zstrings.o: \
-	$(PLATFORM_DIR_OBJ)         \
-	$(SOURCE_DIR)/zstrings.c    \
+	$(PLATFORM_DIR_OBJ)      \
+	$(SOURCE_DIR)/zstrings.c \
 	$(SOURCE_DIR)/zstrings.h
 		gcc -c $(SOURCE_DIR)/zstrings.c -o $@
 
