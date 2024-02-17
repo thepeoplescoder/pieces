@@ -7,7 +7,7 @@ from typing import TypeAlias
 from typing import TypeGuard
 
 ArgumentTransformer: TypeAlias = Callable[[str], str]
-ArgumentList:        TypeAlias = Iterable[str]
+Arguments:           TypeAlias = Iterable[str]
 ArgumentChecker:     TypeAlias = Callable[[str], bool]
 
 ArgumentGroup: TypeAlias = str | object | None
@@ -21,7 +21,7 @@ def is_valid_arg(arg) -> TypeGuard[str]:
 class CommandLineDeque(deque[str]):
     __last_arg: str | None
 
-    def __init__(self, iterable: ArgumentList=None) -> None:
+    def __init__(self, iterable: Arguments=None) -> None:
         super().__init__(iterable if iterable else sys.argv[1:])
 
     def unshift_and_transform_next_valid_arg(
