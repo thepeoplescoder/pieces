@@ -3,9 +3,9 @@
 
 #define __strcmp strcmp
 
-const char * const command_line_syntax___HELP_ARGS[2]        = {"--help",        "-?"};
-const char * const command_line_syntax___SPLIT_ARGS[2]       = {"--split",       "-s"};
-const char * const command_line_syntax___MERGE_ARGS[2]       = {"--merge",       "-m"};
+const char * const command_line_syntax___HELP_ARGS[3]        = {"help", "--help", "-?"};
+const char * const command_line_syntax___SPLIT_ARGS[3]       = {"split", "--split", "-s"};
+const char * const command_line_syntax___MERGE_ARGS[3]       = {"merge", "--merge", "-m"};
 const char * const command_line_syntax___INTERLEAVED_ARGS[2] = {"--interleaved", "-i"};
 
 #define HELP_ARGS        command_line_syntax___HELP_ARGS

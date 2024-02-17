@@ -1,6 +1,6 @@
-HELP_ARGS        = ("--help", "-?")
-SPLIT_ARGS       = ("--split", "-s")
-MERGE_ARGS       = ("--merge", "-m")
+HELP_ARGS        = ("help", "--help", "-?")
+SPLIT_ARGS       = ("split", "--split", "-s")
+MERGE_ARGS       = ("merge", "--merge", "-m")
 INTERLEAVED_ARGS = ("--interleaved", "-i")
 
 def is_help_arg(s: str) -> bool:
