@@ -36,24 +36,24 @@
 
 typedef int (*split_merge_handler)(const char *f1, const char *f2, const char *f3, bool interleaved);
 
-static int display_help(int argc, char **argv, int *index, const char *current_arg);
-static int split_files_get_arguments(int argc, char **argv, int *index, const char *current_arg);
-static int merge_files_get_arguments(int argc, char **argv, int *index, const char *current_arg);
-static int split_files(const char *infilename, const char *outfilename1, const char *outfilename2, bool is_interleaved);
-static int merge_files(const char *infilename1, const char *infilename2, const char *outfilename, bool is_interleaved);
-static int handle_split_or_merge(int argc, char **argv, int *index, const char *current_arg, const char **error_messages, split_merge_handler handler);
-static bool get_arguments_helper(int argc, char **argv, int *index, const char *current_arg, const char **filenames, const char **error_messages, bool *is_interleaved);
+static int display_help              (int argc, char **argv, int *index, const char *current_arg);
+static int split_file_get_arguments  (int argc, char **argv, int *index, const char *current_arg);
+static int merge_files_get_arguments (int argc, char **argv, int *index, const char *current_arg);
+static int handle_split_or_merge     (int argc, char **argv, int *index, const char *current_arg,                         const char **error_messages, split_merge_handler handler);
+static bool get_arguments_helper     (int argc, char **argv, int *index, const char *current_arg, const char **filenames, const char **error_messages, bool *is_interleaved);
+static bool get_next_three_filenames (int argc, char **argv, int *index,                          const char **filenames, const char **error_messages);
 
-static bool get_next_three_filenames(int argc, char **argv, int *index, const char **filenames, const char **error_messages);
+static int split_file  (const char *infilename,  const char *outfilename1, const char *outfilename2, bool is_interleaved);
+static int merge_files (const char *infilename1, const char *infilename2,  const char *outfilename,  bool is_interleaved);
 
-static long file_length(FILE *fp);
-static void file_close(FILE *fp);
+static long file_length (FILE *fp);
+static void file_close  (FILE *fp);
 
 subcommand___subcommand subcommand___pick_subcommand(const char *arg)
 {
     if      (is_help_arg(arg) || arg == NO_MORE_ARGUMENTS) { return display_help;              }
     else if (is_merge_arg(arg))                            { return merge_files_get_arguments; }
-    else                                                   { return split_files_get_arguments; }
+    else                                                   { return split_file_get_arguments;  }
 }
 
 static int display_help(int argc, char **argv, int *index, const char *current_arg)
@@ -110,14 +110,14 @@ static int display_help(int argc, char **argv, int *index, const char *current_a
     return result;
 }
 
-static int split_files_get_arguments(int argc, char **argv, int *index, const char *current_arg)
+static int split_file_get_arguments(int argc, char **argv, int *index, const char *current_arg)
 {
     const char *error_messages[] = {
         "Input file name not provided.",
         "Output file name #1 not provided.",
         "Output file name #2 not provided."
     };
-    return handle_split_or_merge(argc, argv, index, current_arg, error_messages, split_files);
+    return handle_split_or_merge(argc, argv, index, current_arg, error_messages, split_file);
 }
 
 static int merge_files_get_arguments(int argc, char **argv, int *index, const char *current_arg)
@@ -130,7 +130,57 @@ static int merge_files_get_arguments(int argc, char **argv, int *index, const ch
     return handle_split_or_merge(argc, argv, index, current_arg, error_messages, merge_files);
 }
 
-static int split_files(const char *infilename, const char *outfilename1, const char *outfilename2, bool is_interleaved)
+static int handle_split_or_merge(int argc, char **argv, int *index, const char *current_arg, const char **error_messages, split_merge_handler handler)
+{
+    const char *filenames[] = {NULL, NULL, NULL};
+    bool is_interleaved;
+
+    if (!get_arguments_helper(argc, argv, index, current_arg, filenames, error_messages, &is_interleaved))
+    {
+        return 1;
+    }
+
+    return (*handler)(filenames[0], filenames[1], filenames[2], is_interleaved);
+}
+
+static bool get_arguments_helper(int argc, char **argv, int *index, const char *current_arg, const char **filenames, const char **error_messages, bool *is_interleaved)
+{
+    if (!get_next_three_filenames(argc, argv, index, filenames, error_messages))
+    {
+        return false;
+    }
+
+    current_arg = unshift_next_valid_arg(argc, argv, index, NULL, is_interleaved_arg);
+    if (current_arg == INVALID_ARGUMENT)
+    {
+        fprintf(stderr, current_arg, argv[*index]);
+        return false;
+    }
+
+    if (!is_interleaved) { return false; }
+    *is_interleaved = (current_arg != NO_MORE_ARGUMENTS);
+
+    return true;
+}
+
+static bool get_next_three_filenames(int argc, char **argv, int *index, const char **filenames, const char **error_messages)
+{
+    int i;
+
+    for (i = 0; i < 3; i++)
+    {
+        filenames[i] = unshift_next_arg(argc, argv, index);
+        if (filenames[i] == NO_MORE_ARGUMENTS)
+        {
+            fprintf(stderr, "%s\n", error_messages[i]);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static int split_file(const char *infilename, const char *outfilename1, const char *outfilename2, bool is_interleaved)
 {
     FILE *fin = NULL;
     FILE *fout[] = {NULL, NULL};
@@ -184,7 +234,7 @@ static int split_files(const char *infilename, const char *outfilename1, const c
         length = file_length(fin);
 
         ends[1]   = length;
-        starts[1] = (length / 2) + (length % 2);    // we want the second half to be shorter.
+        starts[1] = length - (length / 2);  // we want the second half to be shorter.
 
         ends[0]   = starts[1];
         starts[0] = 0;
@@ -259,22 +309,31 @@ static int merge_files(const char *infilename1, const char *infilename2, const c
 
     if (is_interleaved)
     {
+        /*
+            Here, there are two cases:
+                Case 1: First file is larger than second file.
+                    The last byte will be read from the first file,
+                    so the second file should report EOF.
+
+                Case 2: First file and second file are of equal length.
+                    The last byte will be read from the second file,
+                    so the first file should report EOF.
+        */
+
         i = 0;
         while (true)
         {
             ch = getc(fin[i]);
             if (ch == EOF)
             {
-                if (i || !feof(fin[i]))
+                if (ferror(fin[i]))
                 {
-                    perror("Error");
                     result = 1;
                 }
                 break;
             }
             if (putc(ch, fout) == EOF)
             {
-                perror("Error");
                 result = 1;
                 break;
             }
@@ -289,7 +348,6 @@ static int merge_files(const char *infilename1, const char *infilename2, const c
             {
                 if ( (ch = getc(fin[i])) == EOF || putc(ch, fout) == EOF )
                 {
-                    perror("Error");
                     result = 1;
                     i = 2;
                     break;
@@ -298,61 +356,13 @@ static int merge_files(const char *infilename1, const char *infilename2, const c
         }
     }
 
+    if (result) { perror("Error"); }
+
     fclose(fin[0]);
     fclose(fin[1]);
     fclose(fout);
 
     return result;
-}
-
-static int handle_split_or_merge(int argc, char **argv, int *index, const char *current_arg, const char **error_messages, split_merge_handler handler)
-{
-    const char *filenames[] = {NULL, NULL, NULL};
-    bool is_interleaved;
-
-    if (!get_arguments_helper(argc, argv, index, current_arg, filenames, error_messages, &is_interleaved))
-    {
-        return 1;
-    }
-
-    return (*handler)(filenames[0], filenames[1], filenames[2], is_interleaved);
-}
-
-static bool get_arguments_helper(int argc, char **argv, int *index, const char *current_arg, const char **filenames, const char **error_messages, bool *is_interleaved)
-{
-    if (!get_next_three_filenames(argc, argv, index, filenames, error_messages))
-    {
-        return false;
-    }
-
-    current_arg = unshift_next_valid_arg(argc, argv, index, NULL, is_interleaved_arg);
-    if (current_arg == INVALID_ARGUMENT)
-    {
-        fprintf(stderr, current_arg, argv[*index]);
-        return false;
-    }
-
-    if (!is_interleaved) { return false; }
-    *is_interleaved = (current_arg != NO_MORE_ARGUMENTS);
-
-    return true;
-}
-
-static bool get_next_three_filenames(int argc, char **argv, int *index, const char **filenames, const char **error_messages)
-{
-    int i;
-
-    for (i = 0; i < 3; i++)
-    {
-        filenames[i] = unshift_next_arg(argc, argv, index);
-        if (filenames[i] == NO_MORE_ARGUMENTS)
-        {
-            fprintf(stderr, "%s\n", error_messages[i]);
-            return false;
-        }
-    }
-
-    return true;
 }
 
 static long file_length(FILE *fp)

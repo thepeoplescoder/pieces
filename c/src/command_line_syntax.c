@@ -1,7 +1,8 @@
 #include <stdbool.h>
+#include <string.h>
 #include "command_line_syntax.h"
 
-#define __strcmp strcmp
+#define __strcmp strcmp     // in case i want to use a different string comparison function
 
 const char * const command_line_syntax___HELP_ARGS[3]        = {"help", "--help", "-?"};
 const char * const command_line_syntax___SPLIT_ARGS[3]       = {"split", "--split", "-s"};
