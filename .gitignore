@@ -2,3 +2,9 @@
 *.exe
 c/executables
 c/src/objects
+cpp*/
+csharp/
+rust/
+go/
+ruby/
+php/
