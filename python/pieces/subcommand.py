@@ -106,7 +106,6 @@ def merge_files(filenames: tuple[str, str, str], is_interleaved: bool) -> int:
             return 1
 
         i = 0
-
         if is_interleaved:
             def read() -> bytes:
                 nonlocal i
@@ -140,7 +139,6 @@ def split_file(filenames: tuple[str, str, str], is_interleaved: bool) -> int:
         midpoint = infile_length - (infile_length // 2)
 
         i = 0
-
         if is_interleaved:
             def write(b: bytes) -> None:
                 nonlocal i
