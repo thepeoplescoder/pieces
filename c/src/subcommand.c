@@ -58,9 +58,9 @@ subcommand___subcommand subcommand___pick_subcommand(const char *arg)
 
 static int display_help(int argc, char **argv, int *index, const char *current_arg)
 {
-    char format_string[256];        /* this function makes some unsafe calls to sprintf */
-    char buf[256];                  /* and join_zstrings_to_buffer.  the strings that we are*/
-    char buf_interleaved[256];      /* creating are much, much smaller than 256 chars. */
+    char format_string[256];        /* this function makes some unsafe calls to sprintf      */
+    char buf[256];                  /* and join_zstrings_to_buffer.  the strings that we are */
+    char buf_interleaved[256];      /* creating are much, much smaller than 256 chars.       */
 
     const char *SEP1 = " | ";
     const char *SEP2 = ", ";
@@ -208,7 +208,7 @@ static int split_file(const char *infilename, const char *outfilename1, const ch
         {
             fprintf(stderr, "Could not open %s for writing.", outfilename[i]);
             file_close(fin);        /* why only these two statements are okay */
-            file_close(fout[0]);    /* is an exercise for the reader. */
+            file_close(fout[0]);    /* is an exercise for the reader.         */
             return 1;
         }
     }
@@ -233,7 +233,7 @@ static int split_file(const char *infilename, const char *outfilename1, const ch
         length = file_length(fin);
 
         ends[1]   = length;
-        starts[1] = length - (length / 2);  // we want the second half to be shorter.
+        starts[1] = length - (length / 2);  /* we want the second half to be shorter. */
 
         ends[0]   = starts[1];
         starts[0] = 0;
