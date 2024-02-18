@@ -222,7 +222,6 @@ static int split_file(const char *infilename, const char *outfilename1, const ch
         {
             if (putc(ch, fout[i]) == EOF)
             {
-                perror("Error");
                 result = 1;
                 break;
             }
@@ -245,13 +244,14 @@ static int split_file(const char *infilename, const char *outfilename1, const ch
             {
                 if ( (ch = getc(fin)) == EOF || putc(ch, fout[i]) == EOF )
                 {
-                    perror("Error");
                     offset = length;
                     result = 1;
                 }
             }
         }
     }
+
+    if (result) { perror("Error"); }
 
     fclose(fin);
     fclose(fout[0]);
@@ -309,17 +309,6 @@ static int merge_files(const char *infilename1, const char *infilename2, const c
 
     if (is_interleaved)
     {
-        /*
-            Here, there are two cases:
-                Case 1: First file is larger than second file.
-                    The last byte will be read from the first file,
-                    so the second file should report EOF.
-
-                Case 2: First file and second file are of equal length.
-                    The last byte will be read from the second file,
-                    so the first file should report EOF.
-        */
-
         i = 0;
         while (true)
         {
