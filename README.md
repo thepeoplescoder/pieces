@@ -12,13 +12,16 @@ Although the C implementation is the reference implementation, a
 Python implementation (using only the standard library) exists in
 this repository as well.
 
-## Project Roadmap
 Since equivalent functionality is provided by the `split` and
 `cat` commands in Linux/Unix, this project is to serve more as
 a sample of my coding style when it comes to projects of this
 size, in multiple languages.
 
-#### More implementations coming soon:
+#### Project Roadmap
+* Finish documentation for each existing implementation:
+  * C
+  * Python
+* More implementations coming soon:
   * Java
   * Kotlin
   * Haskell
