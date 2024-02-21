@@ -60,7 +60,8 @@ static int display_help(int argc, char **argv, int *index, const char *current_a
 {
     char format_string[256];        /* this function makes some unsafe calls to sprintf      */
     char buf[256];                  /* and join_zstrings_to_buffer.  the strings that we are */
-    char buf_interleaved[256];      /* creating are much, much smaller than 256 chars.       */
+    char buf_interleaved[256];      /* creating are much, much smaller than 256 chars, so a  */
+                                    /* buffer overflow is impossible.                        */
 
     const char *SEP1 = " | ";
     const char *SEP2 = ", ";
