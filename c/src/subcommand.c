@@ -190,7 +190,6 @@ static int split_file(const char *infilename, const char *outfilename1, const ch
     int i;
     int ch;
     long offset;
-    long midpoint;
     long length;
     long starts[2];
     long ends[2];
